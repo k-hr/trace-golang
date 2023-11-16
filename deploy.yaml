@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trace-app-golang
+  labels:
+    app: trace-app-golang
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trace-app-golang
+  template:
+    metadata:
+      labels:
+        app: trace-app-golang
+    spec:
+      containers:
+        - name: trace-app-golang
+          image: asia.gcr.io/systems-0001/trace-app-golang:0.0.1
+        - name: postgres-service
+          image: postgres:13
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_DB
+              value: example
+            - name: POSTGRES_HOST_AUTH_METHOD
+              value: trust
+          ports:
+            - containerPort: 5432
+
