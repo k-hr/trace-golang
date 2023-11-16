@@ -16,7 +16,10 @@ spec:
     spec:
       containers:
         - name: trace-app-golang
-          image: asia.gcr.io/systems-0001/trace-app-golang:0.0.1
+          image: asia.gcr.io/systems-0001/trace-app-golang:0.0.6
+          ports:
+            - containerPort: 8080
+              name: trace-app
         - name: postgres-service
           image: postgres:13
           env:

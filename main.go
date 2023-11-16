@@ -9,9 +9,11 @@ import (
 	"source.golabs.io/engineering-platforms/lens/trace-app-golang/config"
 	"source.golabs.io/engineering-platforms/lens/trace-app-golang/environment"
 	"source.golabs.io/engineering-platforms/lens/trace-app-golang/handler"
+	"time"
 )
 
 func main() {
+	time.Sleep(5 * time.Second)
 	cfg := config.Load()
 	env := environment.Init(cfg)
 	defer env.TraceExporter.Shutdown(context.Background())
