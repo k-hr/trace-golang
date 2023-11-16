@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"source.golabs.io/engineering-platforms/lens/trace-app-golang/environment"
 	"source.golabs.io/engineering-platforms/lens/trace-app-golang/model"
+	"strconv"
+	"time"
 )
 
 func CreateBook(env environment.Environment) func(w http.ResponseWriter, r *http.Request) {
@@ -34,16 +36,28 @@ func ReadBook(env environment.Environment) func(w http.ResponseWriter, r *http.R
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		title := vars["title"]
+		queryParams := r.URL.Query()
+		apiDelay, _ := strconv.ParseBool(queryParams.Get("api-delay"))
+		dbDelay, _ := strconv.ParseBool(queryParams.Get("db-delay"))
+		runtimeErr, _ := strconv.ParseBool(queryParams.Get("error"))
 
 		if title == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		book, err := env.DBProxy.ReadBook(r.Context(), title)
+		if apiDelay {
+			time.Sleep(5 * time.Second)
+		}
+
+		book, err := env.DBProxy.ReadBook(r.Context(), title, dbDelay, runtimeErr)
 		if err == pg.ErrNoRows {
 			w.WriteHeader(http.StatusNotFound)
 			return
+		}
+
+		if apiDelay {
+			time.Sleep(5 * time.Second)
 		}
 
 		if err != nil {
