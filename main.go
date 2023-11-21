@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gorilla/mux"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
+	"go.opentelemetry.io/otel/propagation"
 	"log"
 	"net/http"
 	"source.golabs.io/engineering-platforms/lens/trace-app-golang/config"
@@ -22,7 +23,10 @@ func main() {
 
 	r.HandleFunc("/v1/books", handler.CreateBook(env)).Methods("POST")
 	r.HandleFunc("/v1/books/{title}", handler.ReadBook(env)).Methods("GET")
-	r.Use(otelmux.Middleware(cfg.AppName))
+	r.Use(otelmux.Middleware(cfg.AppName, otelmux.WithPropagators(propagation.NewCompositeTextMapPropagator(
+		propagation.Baggage{},
+		propagation.TraceContext{},
+	))))
 
 	log.Printf("Listening on port 8080...")
 

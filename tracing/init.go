@@ -6,6 +6,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 )
@@ -33,12 +34,17 @@ func InitTraceExporter(appName, otelExporterEndpoint string) (*otlptrace.Exporte
 		return nil, err
 	}
 
-	otel.SetTracerProvider(
-		trace.NewTracerProvider(
-			trace.WithSampler(trace.AlwaysSample()),
-			trace.WithBatcher(exporter),
-			trace.WithResource(resources),
-		),
-	)
+	otel.SetTracerProvider(trace.NewTracerProvider(
+		trace.WithSampler(trace.AlwaysSample()),
+		trace.WithResource(resources),
+		trace.WithSpanProcessor(
+			trace.NewBatchSpanProcessor(exporter)),
+	))
+
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+		propagation.Baggage{},
+		propagation.TraceContext{},
+	))
+
 	return exporter, nil
 }
