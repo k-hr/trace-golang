@@ -7,6 +7,7 @@ type Config struct {
 	DBPassword           string
 	DBName               string
 	OTLPExporterEndpoint string
+	OTLPMetricExport     bool
 }
 
 func Load() Config {
@@ -16,6 +17,7 @@ func Load() Config {
 		DBUser:               "postgres",
 		DBPassword:           "postgres",
 		DBName:               "example",
-		OTLPExporterEndpoint: "grafana-agent-traces.tempo.svc.cluster.local:4317",
+		OTLPExporterEndpoint: "grafana-agent-flow.tempo.svc.cluster.local:4317",
+		OTLPMetricExport:     false,
 	}
 }

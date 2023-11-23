@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-agent-flow
+data:
+  config.river: |
+    logging {
+      level  = "info"
+      format = "logfmt"
+    }
+    
+    tracing {
+      sampling_fraction = 1.0
+      write_to = [otelcol.exporter.otlp.tempo.input]
+    }
+    
+    prometheus.scrape "trace_app" {
+      targets = [{"__address__"   = "trace-app-golang.default.svc.cluster.local:9090"}]
+      scrape_interval = "15s"
+      forward_to = [otelcol.receiver.prometheus.lens.receiver]
+    }
+    
+    otelcol.receiver.prometheus "lens" {
+      output {
+        metrics = [otelcol.exporter.prometheus.lens.input]
+      }
+    }
+    
+    otelcol.receiver.otlp "example" {
+      grpc {}
+      http {}
+    
+      output {
+        metrics = [otelcol.exporter.prometheus.lens.input]
+        traces  = [otelcol.exporter.otlp.tempo.input]
+      }
+    }
+    
+    otelcol.exporter.prometheus "lens" {
+      forward_to = [prometheus.remote_write.lens.receiver]
+    }
+    
+    prometheus.remote_write "lens" {
+      endpoint {
+        url  = "https://integration-lens.golabs.io/v1/prom/metrics"
+        tls_config {
+          insecure_skip_verify = true
+        }
+        headers = {
+          "Authorization" = "Bearer XXX",
+        }
+      }
+    }
+      
+    otelcol.exporter.otlp "tempo" {
+      client {
+        endpoint = "http://tempo-distributor.tempo.svc.cluster.local:4317"
+        auth     = otelcol.auth.headers.traces.handler
+      
+        tls {
+          insecure = true
+        }
+      }
+    }
+    
+    otelcol.auth.headers "traces" {
+      header {
+        key   = "X-Scope-OrgID"
+        value = "tempo-user-1"
+      }
+    }

@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-agent-flow
+  labels:
+    app: grafana-agent-flow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana-agent-flow
+  template:
+    metadata:
+      labels:
+        app: grafana-agent-flow
+    spec:
+      containers:
+        - name: grafana-agent-flow
+          image: grafana/agent:latest
+          command: ["/bin/sh", "-c", "/usr/bin/grafana-agent run --server.http.listen-addr=0.0.0.0:12345 /etc/agent/config.river"]
+          ports:
+            - containerPort: 12345
+              name: agent-port
+            - containerPort: 4317
+              name: grpc-port
+            - containerPort: 4318
+              name: http-port
+          env:
+            - name: AGENT_MODE
+              value: flow
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/agent
+      volumes:
+        - name: config-volume
+          configMap:
+            name: grafana-agent-flow
+
+
